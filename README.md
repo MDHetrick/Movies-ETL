@@ -1,6 +1,6 @@
 # Movies: Extract, Transform, Load
 ## Resources
-In this evaluation there is data from three sources:
+The data in this challenge comes from three sources:
 
 **Wikipedia Movie Data (wiki_movies):** https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-online/module_8/wikipedia-movies.json
 
