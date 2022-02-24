@@ -49,12 +49,14 @@ def movie_data_fn():
 6. Use the variables provided to create a path to the data files 
 
 ```
-file_dir = 'C://Users/melet/Desktop/Movies-ETL/Resources/'
-#file_dir = 'C://Users/M037228/Desktop/um/Movies-ETL/Resources/'
+file_dir = 'C://Users/M037228/Desktop/um/Movies-ETL/Resources/'
+
 # Wikipedia data
 wiki_file = f'{file_dir}/wikipedia_movies.json'
+
 # Kaggle metadata
 kaggle_file = f'{file_dir}/movies_metadata.csv'
+
 # MovieLens rating data.
 ratings_file = f'{file_dir}/ratings.csv'
 ```
@@ -287,6 +289,7 @@ kaggle_file = f'{file_dir}/movies_metadata.csv'
 ratings_file = f'{file_dir}/ratings.csv'
 ```
 18 and 19. Set the three variables equal to the function created in D1, and set the wiki_movies_df equal to the wiki_file variable. 
+*Note: instead of setting the three variables equal to the function and then seting the DataFrames from the return statement equal to the file names in Step, the code was refactored to set the dataframes equal to the function with the file paths as parameters* 
 
 ```
 wiki_movies_df, kaggle_metadata, ratings = movie_data_extract(wiki_file, kaggle_file, ratings_file)
