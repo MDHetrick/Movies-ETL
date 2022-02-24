@@ -132,7 +132,7 @@ ratings.head()
 1. Add the clean movie function that takes in the argument, "movie".
 ```
 def clean_movie(movie):
-    local_movie = dict(movie)
+    movie = dict(movie)
     alt_titles = {}
     
     for key in ['Also known as','Arabic','Cantonese','Chinese','French',
@@ -140,15 +140,15 @@ def clean_movie(movie):
                 'Mandarin','McCune-Reischauer','Original title','Polish',
                 'Revised Romanization','Romanized','Russian',
                 'Simplified','Traditional','Yiddish']:
-        if key in local_movie:
-            alt_titles[key] = local_movie[key]     
-            local_movie.pop(key)
+        if key in movie:
+            alt_titles[key] = movie[key]     
+            movie.pop(key)
     if len(alt_titles) > 0:
-        local_movie['alt_titles'] = alt_titles
+        movie['alt_titles'] = alt_titles
         
     def change_column_name(old_name, new_name):
-        if old_name in local_movie:
-            local_movie[new_name] = local_movie.pop(old_name)
+        if old_name in movie:
+            movie[new_name] = movie.pop(old_name)
     change_column_name('Adaptation by', 'Writer(s)')
     change_column_name('Country of origin', 'Country')
     change_column_name('Directed by', 'Director')
@@ -169,7 +169,7 @@ def clean_movie(movie):
     change_column_name('Theme music composer', 'Composer(s)')
     change_column_name('Written by', 'Writer(s)')
 
-    return local_movie   
+    return movie
 ```
 2. Add the function from deliverable 1 that takes in three arguments: Wikipedia data, Kaggle metadata, and MovieLens rating data (from Kaggle)
 ```
@@ -319,7 +319,7 @@ def clean_movie(movie):
                 'Mandarin','McCune-Reischauer','Original title','Polish',
                 'Revised Romanization','Romanized','Russian',
                 'Simplified','Traditional','Yiddish']:
-        if key in local_movie:
+        if key in movie:
             alt_titles[key] = movie[key]     
             movie.pop(key)
     if len(alt_titles) > 0:
