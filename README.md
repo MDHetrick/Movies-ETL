@@ -88,7 +88,7 @@ kaggle_metadata.head()
 ```
 ratings.head()
 ```
-#### Complete code: 
+#### Complete code - Deliverable 1: 
 ```
 import json
 import pandas as pd
@@ -303,7 +303,7 @@ wiki_movies_df.head()
 wiki_movies_df.columns.to_list()
 
 ```
-#### Complete Code
+#### Complete Code - Deliverable 2
 ```
 import json
 import pandas as pd
@@ -642,7 +642,7 @@ movies_with_ratings_df.head()
 ```
 movies_df.head()
 ```
-#### Complete Code
+#### Complete Code - Deliverable 3
 ```
 import json
 import pandas as pd
@@ -719,7 +719,7 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
     wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
     
-# 2. Clean the Kaggle metadata.
+    # Clean the Kaggle metadata.
     kaggle_metadata = kaggle_metadata[kaggle_metadata['adult'] == 'False'].drop('adult',axis='columns')
     kaggle_metadata['video'] = kaggle_metadata['video'] == 'True'
     kaggle_metadata['budget'] = kaggle_metadata['budget'].astype(int)
@@ -728,25 +728,17 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     kaggle_metadata['release_date'] = pd.to_datetime(kaggle_metadata['release_date'])
     ratings['timestamp'] = pd.to_datetime(ratings['timestamp'], unit='s')
 
-# 3. Merge the two DataFrames into the movies DataFrame.
     movies_df = pd.merge(wiki_movies_df, kaggle_metadata, on='imdb_id', suffixes=['_wiki','_kaggle'])
-
-# 4. Drop unnecessary columns from the merged DataFrame.
     movies_df.drop(columns=['title_wiki','release_date_wiki','Language','Production company(s)'], inplace=True)
 
-# 5. Add in the function to fill in the missing Kaggle data.
     def fill_missing_kaggle_data(df, kaggle_column, wiki_column):
         df[kaggle_column] = df.apply(
             lambda row: row[wiki_column] if row[kaggle_column] == 0 else row[kaggle_column]
             , axis=1)
         df.drop(columns=wiki_column, inplace=True)
-
-# 6. Call the function in Step 5 with the DataFrame and columns as the arguments.
     fill_missing_kaggle_data(movies_df, 'runtime', 'running_time')
     fill_missing_kaggle_data(movies_df, 'budget_kaggle', 'budget_wiki')
     fill_missing_kaggle_data(movies_df, 'revenue', 'box_office')
-
-# 7. Filter the movies DataFrame for specific columns.
     movies_df = movies_df.loc[:, ['imdb_id',
                                   'id',
                                   'title_kaggle',
@@ -780,7 +772,6 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
                                   'Based on'
                           ]]
 
-# 8. Rename the columns in the movies DataFrame.
     movies_df.rename({'id':'kaggle_id',
                   'title_kaggle':'title',
                   'url':'wikipedia_url',
@@ -798,8 +789,6 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
                   'Based on':'based_on'
                  }, axis='columns', inplace=True)
 
-
-# 9. Transform and merge the ratings DataFrame.
     rating_counts = ratings.groupby(['movieId','rating'], as_index=False).count() \
                     .rename({'userId':'count'}, axis=1) \
                     .pivot(index='movieId',columns='rating', values='count')
@@ -811,23 +800,17 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     print(f'{time.time() - start_time} total seconds elapsed')
     return wiki_movies_df, movies_with_ratings_df, movies_df
 
-# 10. Create the path to your file directory and variables for the three files.
 file_dir = 'C://Users/M037228/Desktop/um/Movies-ETL/Resources/'
 wiki_file = f'{file_dir}/wikipedia_movies.json'
 kaggle_file = f'{file_dir}/movies_metadata.csv'
 ratings_file = f'{file_dir}/ratings.csv'
 
-# 11. Set the three variables equal to the function created in D1.
-# 12. Set the DataFrames from the return statement equal to the file names in Step 11. 
 wiki_movies_df, movies_with_ratings_df, movies_df = extract_transform_return(wiki_file, kaggle_file, ratings_file)
 
-# 13. Check the wiki_movies_df DataFrame. 
 wiki_movies_df.head()
 
-# 14. Check the movies_with_ratings_df DataFrame.
 movies_with_ratings_df.head()
 
-# 15. Check the movies_df DataFrame. 
 movies_df.head()
 ```
 
