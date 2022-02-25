@@ -96,6 +96,7 @@ import numpy as np
 import re
 import psycopg2
 import time
+from config import db_pw
 from sqlalchemy import create_engine
 
 def movie_data_fn():
@@ -310,9 +311,10 @@ import json
 import pandas as pd
 import numpy as np
 import re
-from sqlalchemy import create_engine
 import psycopg2
 import time
+from config import db_pw
+from sqlalchemy import create_engine
 
 def clean_movie(movie):
     movie = dict(movie)
@@ -445,9 +447,10 @@ import json
 import pandas as pd
 import numpy as np
 import re
-from sqlalchemy import create_engine
 import psycopg2
 import time
+from config import db_pw
+from sqlalchemy import create_engine
 ```
 1. Add function that reads in the three data files
 ```
@@ -649,9 +652,10 @@ import json
 import pandas as pd
 import numpy as np
 import re
-from sqlalchemy import create_engine
 import psycopg2
 import time
+from config import db_pw
+from sqlalchemy import create_engine
 
 def clean_movie(movie):
     movie = dict(movie)
