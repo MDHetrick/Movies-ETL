@@ -885,9 +885,10 @@ import json
 import pandas as pd
 import numpy as np
 import re
-from sqlalchemy import create_engine
 import psycopg2
 import time
+from config import db_pw
+from sqlalchemy import create_engine
 
 def clean_movie(movie):
     movie = dict(movie)
