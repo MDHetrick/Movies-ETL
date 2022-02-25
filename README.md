@@ -452,7 +452,6 @@ import time
 1. Add function that reads in the three data files
 ```
 def extract_transform_return(wiki_file, kaggle_file, ratings_file):
-    start_time = time.time()
     kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
     ratings = pd.read_csv(f'{file_dir}ratings.csv', low_memory=False)
     
@@ -616,8 +615,7 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     rating_counts.columns = ['rating_' + str(col) for col in rating_counts.columns]
     movies_with_ratings_df = pd.merge(movies_df, rating_counts, left_on='kaggle_id', right_index=True, how='left')
     movies_with_ratings_df[rating_counts.columns] = movies_with_ratings_df[rating_counts.columns].fillna(0)
- 
-    print(f'{time.time() - start_time} total seconds elapsed')
+
     return wiki_movies_df, movies_with_ratings_df, movies_df
 ```
 10. Create the path to your file directory and variables for the three files.
@@ -655,8 +653,47 @@ from sqlalchemy import create_engine
 import psycopg2
 import time
 
+def clean_movie(movie):
+    movie = dict(movie)
+    alt_titles = {}
+    
+    for key in ['Also known as','Arabic','Cantonese','Chinese','French',
+                'Hangul','Hebrew','Hepburn','Japanese','Literally',
+                'Mandarin','McCune-Reischauer','Original title','Polish',
+                'Revised Romanization','Romanized','Russian',
+                'Simplified','Traditional','Yiddish']:
+        if key in movie:
+            alt_titles[key] = movie[key]     
+            movie.pop(key)
+    if len(alt_titles) > 0:
+        movie['alt_titles'] = alt_titles
+        
+    def change_column_name(old_name, new_name):
+        if old_name in movie:
+            movie[new_name] = movie.pop(old_name)
+    change_column_name('Adaptation by', 'Writer(s)')
+    change_column_name('Country of origin', 'Country')
+    change_column_name('Directed by', 'Director')
+    change_column_name('Distributed by', 'Distributor')
+    change_column_name('Edited by', 'Editor(s)')
+    change_column_name('Length', 'Running time')
+    change_column_name('Original release', 'Release date')
+    change_column_name('Music by', 'Composer(s)')
+    change_column_name('Produced by', 'Producer(s)')
+    change_column_name('Producer', 'Producer(s)')
+    change_column_name('Productioncompanies ', 'Production company(s)')
+    change_column_name('Productioncompany ', 'Production company(s)')
+    change_column_name('Released', 'Release Date')
+    change_column_name('Release Date', 'Release date')
+    change_column_name('Screen story by', 'Writer(s)')
+    change_column_name('Screenplay by', 'Writer(s)')
+    change_column_name('Story by', 'Writer(s)')
+    change_column_name('Theme music composer', 'Composer(s)')
+    change_column_name('Written by', 'Writer(s)')
+
+    return movie
+
 def extract_transform_return(wiki_file, kaggle_file, ratings_file):
-    start_time = time.time()
     kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
     ratings = pd.read_csv(f'{file_dir}ratings.csv', low_memory=False)
     
@@ -844,7 +881,55 @@ movies_df.head()
 
 #### Complete Code - Deliverable 4
 ```
-def extract_transform_load():
+import json
+import pandas as pd
+import numpy as np
+import re
+from sqlalchemy import create_engine
+import psycopg2
+import time
+
+def clean_movie(movie):
+    movie = dict(movie)
+    alt_titles = {}
+    
+    for key in ['Also known as','Arabic','Cantonese','Chinese','French',
+                'Hangul','Hebrew','Hepburn','Japanese','Literally',
+                'Mandarin','McCune-Reischauer','Original title','Polish',
+                'Revised Romanization','Romanized','Russian',
+                'Simplified','Traditional','Yiddish']:
+        if key in movie:
+            alt_titles[key] = movie[key]     
+            movie.pop(key)
+    if len(alt_titles) > 0:
+        movie['alt_titles'] = alt_titles
+        
+    def change_column_name(old_name, new_name):
+        if old_name in movie:
+            movie[new_name] = movie.pop(old_name)
+    change_column_name('Adaptation by', 'Writer(s)')
+    change_column_name('Country of origin', 'Country')
+    change_column_name('Directed by', 'Director')
+    change_column_name('Distributed by', 'Distributor')
+    change_column_name('Edited by', 'Editor(s)')
+    change_column_name('Length', 'Running time')
+    change_column_name('Original release', 'Release date')
+    change_column_name('Music by', 'Composer(s)')
+    change_column_name('Produced by', 'Producer(s)')
+    change_column_name('Producer', 'Producer(s)')
+    change_column_name('Productioncompanies ', 'Production company(s)')
+    change_column_name('Productioncompany ', 'Production company(s)')
+    change_column_name('Released', 'Release Date')
+    change_column_name('Release Date', 'Release date')
+    change_column_name('Screen story by', 'Writer(s)')
+    change_column_name('Screenplay by', 'Writer(s)')
+    change_column_name('Story by', 'Writer(s)')
+    change_column_name('Theme music composer', 'Composer(s)')
+    change_column_name('Written by', 'Writer(s)')
+
+    return movie
+    
+ def extract_transform_load():
     kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
     ratings = pd.read_csv(f'{file_dir}ratings.csv', low_memory=False)
     
@@ -883,7 +968,7 @@ def extract_transform_load():
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(form_two)', s, flags=re.IGNORECASE):
+        elif re.match(form_two, s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
@@ -1002,7 +1087,15 @@ def extract_transform_load():
         rows_imported += len(data)
         # add elapsed time to final print out
         print(f'Done. {time.time() - start_time} total seconds elapsed')
-  ```
+
+file_dir = 'C://Users/M037228/Desktop/um/Movies-ETL/Resources/'
+wiki_file = f'{file_dir}/wikipedia_movies.json'
+kaggle_file = f'{file_dir}/movies_metadata.csv'
+ratings_file = f'{file_dir}/ratings.csv'
+
+extract_transform_load()
+
+```
 7. Run the program
 8. Query PostgreSQL database to retrieve # rows for movies and ratings tables
 
