@@ -182,13 +182,12 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
     with open(f'{file_dir}wikipedia-movies.json', mode='r') as file:
         wiki_movies_raw = json.load(file)          
 ```    
-3. Write a list comprehension to filter out TV shows.
+3. Write a list comprehension to filter out TV shows. This includes entries with directors and imdb links, and excludes anything that has # of episodes.
 ```
         wiki_movies = [movie for movie in wiki_movies_raw
                if ('Director' in movie or 'Directed by' in movie) 
                    and 'imdb_link' in movie
                    and 'No. of episodes' not in movie]
-    print(len(wiki_movies))
 ```
 4. Write a list comprehension to iterate through the cleaned wiki movies list and call the clean_movie function on each movie.
 ```
@@ -240,7 +239,7 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+        elif re.match(form_two, s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
@@ -277,6 +276,7 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
     running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
     wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
+    wiki_movies_df.drop('Running time', axis=1, inplace=True)
     
     return wiki_movies_df, kaggle_metadata, ratings 
 ```
@@ -289,6 +289,7 @@ kaggle_file = f'{file_dir}/movies_metadata.csv'
 ratings_file = f'{file_dir}/ratings.csv'
 ```
 18 and 19. Set the three variables equal to the function created in D1, and set the wiki_movies_df equal to the wiki_file variable. 
+
 *Note: instead of setting the three variables equal to the function and then seting the DataFrames from the return statement equal to the file names in Step, the code was refactored to set the dataframes equal to the function with the file paths as parameters* 
 
 ```
@@ -363,8 +364,6 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
                if ('Director' in movie or 'Directed by' in movie) 
                    and 'imdb_link' in movie
                    and 'No. of episodes' not in movie]
-    print(len(wiki_movies))
-
     clean_movies = [clean_movie(movie) for movie in wiki_movies]
     wiki_movies_df = pd.DataFrame(clean_movies)
     try:
@@ -392,7 +391,7 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+        elif re.match(form_two, s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
@@ -421,6 +420,7 @@ def movie_data_extract(wiki_file, kaggle_file, ratings_file):
     running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
     wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
+    wiki_movies_df.drop('Running time', axis=1, inplace=True)
     
     return wiki_movies_df, kaggle_metadata, ratings     
 
@@ -468,6 +468,7 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
         wiki_movies_df.drop_duplicates(subset='imdb_id', inplace=True)
     except:
         print(f'ERROR:{Exception} - imdb_id cannot be extracted from {imdb_link}')
+    
     wiki_columns_to_keep = [column for column in wiki_movies_df.columns if wiki_movies_df[column].isnull().sum() < len(wiki_movies_df) * 0.9]
     wiki_movies_df = wiki_movies_df[wiki_columns_to_keep]
 
@@ -487,23 +488,23 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+        elif re.match(form_two, s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
         else:
             return np.nan
+        
     box_office = box_office.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
     wiki_movies_df['box_office'] = box_office.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
-    
-    #clean budget 
+    wiki_movies_df.drop('Box office', axis=1, inplace=True)
+
     budget = wiki_movies_df['Budget'].dropna()
     budget = budget.map(lambda x: ' '.join(x) if type(x) == list else x)
     budget = budget.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
     budget = budget.str.replace(r'\[\d+\]\s*', '', regex=True)
     wiki_movies_df['budget'] = budget.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
 
-    #clean release date
     release_date = wiki_movies_df['Release date'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     date_form_one = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s[123]?\d,\s\d{4}'
     date_form_two = r'\d{4}.[01]\d.[0123]\d'
@@ -511,12 +512,13 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     date_form_four = r'\d{4}'
     release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})', flags=re.IGNORECASE)
     wiki_movies_df['release_date'] = pd.to_datetime(release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})')[0], infer_datetime_format=True)
-    
-    #clean running time
+
     running_time = wiki_movies_df['Running time'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
     wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
+    wiki_movies_df.drop('Running time', axis=1, inplace=True)
+
 ``` 
 2. Clean the Kaggle metadata.
 ```
@@ -625,8 +627,9 @@ wiki_file = f'{file_dir}/wikipedia_movies.json'
 kaggle_file = f'{file_dir}/movies_metadata.csv'
 ratings_file = f'{file_dir}/ratings.csv'
 ```
-11. Set the three variables equal to the function created in D1.
-12. Set the DataFrames from the return statement equal to the file names in Step 11. 
+11 & 12. Set the three variables equal to the function created in D1, and set the DataFrames from the return statement equal to the file names in Step 11
+
+*Note: instead of setting the three variables equal to the function and then setting the DataFrames from the return statement equal to the file names, the code was refactored to set the dataframes equal to the function with the file paths as parameters.*
 ```
 wiki_movies_df, movies_with_ratings_df, movies_df = extract_transform_return(wiki_file, kaggle_file, ratings_file)
 ```
@@ -688,23 +691,23 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+        elif re.match(form_two, s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
         else:
             return np.nan
+        
     box_office = box_office.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
     wiki_movies_df['box_office'] = box_office.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
-    
-    #clean budget 
+    wiki_movies_df.drop('Box office', axis=1, inplace=True)
+
     budget = wiki_movies_df['Budget'].dropna()
     budget = budget.map(lambda x: ' '.join(x) if type(x) == list else x)
     budget = budget.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
     budget = budget.str.replace(r'\[\d+\]\s*', '', regex=True)
     wiki_movies_df['budget'] = budget.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
 
-    #clean release date
     release_date = wiki_movies_df['Release date'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     date_form_one = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s[123]?\d,\s\d{4}'
     date_form_two = r'\d{4}.[01]\d.[0123]\d'
@@ -712,12 +715,12 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     date_form_four = r'\d{4}'
     release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})', flags=re.IGNORECASE)
     wiki_movies_df['release_date'] = pd.to_datetime(release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})')[0], infer_datetime_format=True)
-    
-    #clean running time
+
     running_time = wiki_movies_df['Running time'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
     wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
+    wiki_movies_df.drop('Running time', axis=1, inplace=True)
     
     # Clean the Kaggle metadata.
     kaggle_metadata = kaggle_metadata[kaggle_metadata['adult'] == 'False'].drop('adult',axis='columns')
@@ -818,23 +821,30 @@ movies_df.head()
 ### Deliverable 4
 #### This code will load the final dataframe: movies_df to a SQL database
 
+1. Uncomment # from config import db_password
+2. remove return statement
+3. Add the code to create a connection to the PostgreSQL database, and add movies_df to SQL database
 ```
-    # Transform and merge the ratings DataFrame.
     db_string = f"postgresql://postgres:{db_pw}@127.0.0.1:5432/movie_data" 
     engine = create_engine(db_string)
     movies_df.to_sql(name='movies', con=engine, if_exists='replace')
+```
+4. before reading in Movie Lens rating CSV data, drop ratings table in pgAdmin
+5. Add code that prints elapsed time to import each row
+```    
+    start_time = time.time()
     rows_imported = 0
     for data in pd.read_csv(f'{file_dir}ratings.csv', chunksize=1000000):
         print(f'importing rows {rows_imported} to {rows_imported + len(data)}...', end='')
         data.to_sql(name='ratings', con=engine, if_exists='append')
         rows_imported += len(data)
-
-    print(f'Done. {time.time() - start_time} total seconds elapsed')
+        # add elapsed time to final print out
+        print(f'Done. {time.time() - start_time} total seconds elapsed')
 ```
 
+#### Complete Code - Deliverable 4
 ```
 def extract_transform_load():
-    start_time = time.time()
     kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
     ratings = pd.read_csv(f'{file_dir}ratings.csv', low_memory=False)
     
@@ -873,7 +883,7 @@ def extract_transform_load():
             s = re.sub('\$|\s|[a-zA-Z]','', s)
             value = float(s) * 10**9
             return value
-        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+        elif re.match(form_two)', s, flags=re.IGNORECASE):
             s = re.sub('\$|,','', s)
             value = float(s)
             return value
@@ -984,11 +994,15 @@ def extract_transform_load():
     db_string = f"postgresql://postgres:{db_pw}@127.0.0.1:5432/movie_data" 
     engine = create_engine(db_string)
     movies_df.to_sql(name='movies', con=engine, if_exists='replace')
+    start_time = time.time()
     rows_imported = 0
     for data in pd.read_csv(f'{file_dir}ratings.csv', chunksize=1000000):
         print(f'importing rows {rows_imported} to {rows_imported + len(data)}...', end='')
         data.to_sql(name='ratings', con=engine, if_exists='append')
         rows_imported += len(data)
-
-    print(f'Done. {time.time() - start_time} total seconds elapsed')
-    ```
+        # add elapsed time to final print out
+        print(f'Done. {time.time() - start_time} total seconds elapsed')
+  ```
+  7. Run the program
+  8. Query PostrgreSQL database to retrieve # rows for movies and ratings tables
+  9. 
