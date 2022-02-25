@@ -1003,6 +1003,25 @@ def extract_transform_load():
         # add elapsed time to final print out
         print(f'Done. {time.time() - start_time} total seconds elapsed')
   ```
-  7. Run the program
-  8. Query PostrgreSQL database to retrieve # rows for movies and ratings tables
-  9. 
+7. Run the program
+8. Query PostgreSQL database to retrieve # rows for movies and ratings tables
+
+**Query #1:**
+```
+SELECT COUNT(*)
+FROM movies;
+```
+**Query #1 Output:**  
+![Image](WEBLINK-movies_query.png)
+
+     
+
+**Query #2:**
+```
+SELECT COUNT(*) 
+FROM ratings;
+```
+**Query #2 output:**
+![Image](WEBLINK-movies_query.png)
+
+  
