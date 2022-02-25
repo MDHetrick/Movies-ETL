@@ -1,9 +1,6 @@
 config.py
-movies_metadata.csv
 ratings.csv
-wikipedia-movies.json
 movies_metadata.csv.zip
-C://Users/melet/um/hw/Movies-ETL/Resources/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
