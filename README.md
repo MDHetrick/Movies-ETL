@@ -929,7 +929,7 @@ def clean_movie(movie):
 
     return movie
     
- def extract_transform_load():
+def extract_transform_load():
     kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
     ratings = pd.read_csv(f'{file_dir}ratings.csv', low_memory=False)
     
