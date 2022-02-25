@@ -836,8 +836,7 @@ def extract_transform_return(wiki_file, kaggle_file, ratings_file):
     rating_counts.columns = ['rating_' + str(col) for col in rating_counts.columns]
     movies_with_ratings_df = pd.merge(movies_df, rating_counts, left_on='kaggle_id', right_index=True, how='left')
     movies_with_ratings_df[rating_counts.columns] = movies_with_ratings_df[rating_counts.columns].fillna(0)
- 
-    print(f'{time.time() - start_time} total seconds elapsed')
+
     return wiki_movies_df, movies_with_ratings_df, movies_df
 
 file_dir = 'C://Users/M037228/Desktop/um/Movies-ETL/Resources/'
