@@ -1104,21 +1104,15 @@ extract_transform_load()
 8. Query PostgreSQL database to retrieve # rows for movies and ratings tables
 
 **Query #1:**
-```
-SELECT COUNT(*)
-FROM movies;
-```
-**Query #1 Output:**  
-![Image](WEBLINK-movies_query.png)
+
+
+![Image](https://github.com/MDHetrick/Movies-ETL/blob/main/Resources/movies_query.png)
 
      
 
 **Query #2:**
-```
-SELECT COUNT(*) 
-FROM ratings;
-```
-**Query #2 output:**
-![Image](WEBLINK-movies_query.png)
+
+
+![Image](https://github.com/MDHetrick/Movies-ETL/blob/main/Resources/ratings_query.png)
 
   
