@@ -1,4 +1,5 @@
 # Movies: Extract, Transform, Load
+## Project Overview
 The purpose of this analysis is to extract movie data from three sources, transform and clean the data, and load the cleaned data into two SQL tables.
 ## Resources
 The data in this challenge comes from three sources:
